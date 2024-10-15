@@ -25,11 +25,6 @@ struct node
 
 int batch[N]; // 模拟多道
 
-bool cmp(node a, node b)
-{
-    return a.Ctime < b.Ctime;
-};
-
 int Timestamp(string time) // 时间戳转换
 {
     int pos = time.find_last_of(':'); // 找到最后冒号，以分隔小时和分钟
@@ -158,6 +153,7 @@ int main()
     int op;
     while (1)
     {
+        system("cls");
         cout << "*****************************\n\n";
         cout << "    欢迎体验作业调度算法\n\n";
         cout << "      1.先来先服务\n\n";
@@ -181,6 +177,7 @@ int main()
             break; // 跳转到最高响应比算法
         default:
             cout << "\n     选择无效\n\n";
+            system("cls");
         }
     }
     return 0;
@@ -206,8 +203,9 @@ void DataDeal()
         cin >> work[i].Rtime; // 输入任务耗时
     }
 
-    // 对任务数组进行排序，使用 cmp 函数进行比较
-    sort(work + 1, work + 1 + task, cmp);
+    // 对任务数组进行自定义排序，利用lambda函数
+    sort(work + 1, work + 1 + task, [](node a, node b)
+         { return a.Ctime < b.Ctime; });
 }
 
 void PrintResults(string name, int batchsize)
@@ -227,10 +225,23 @@ void PrintResults(string name, int batchsize)
     cout << endl
          << endl;
     now_time = 0;
+    while (1)
+    {
+        cout << "OK? [Y/n]\n";
+        char op;
+        cin >> op;
+        if(op=='Y')
+        {
+            system("cls");
+            return;
+        }
+        
+    }
 }
 
 void menu(string name, function<void(int)> func)
 {
+    system("cls");
     int op;
     while (1)
     {
@@ -264,6 +275,7 @@ void menu(string name, function<void(int)> func)
             break;
         default:
             cout << "\n     选择无效\n\n";
+            system("cls");
         }
     }
 }
