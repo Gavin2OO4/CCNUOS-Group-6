@@ -44,7 +44,7 @@ void p_Timestamp(int time)
          << setw(2) << setfill('0') << time % 60 << "\t";
 }
 
-void DataDeal();                          // 数据处理
+void DealData();                          // 数据处理
 void PrintResults(int op, int batchsize); // 打印结果
 
 void menu(string name, function<void(int)> func);
@@ -183,7 +183,7 @@ int main()
     return 0;
 }
 
-void DataDeal()
+void DealData()
 {
     cout << "      请输入要处理的任务数量: ";
     cin >> task; // 读取用户输入的任务数量
@@ -230,12 +230,11 @@ void PrintResults(string name, int batchsize)
         cout << "OK? [Y/n]\n";
         char op;
         cin >> op;
-        if(op=='Y')
+        if (op == 'Y')
         {
             system("cls");
             return;
         }
-        
     }
 }
 
@@ -257,7 +256,7 @@ void menu(string name, function<void(int)> func)
         case 0:
             return;
         case 1:
-            DataDeal();
+            DealData();
             func(1); // 单道运行
             PrintResults(name, 1);
             batch[1] = 0;
@@ -267,7 +266,7 @@ void menu(string name, function<void(int)> func)
             int batchsize;
             cin >> batchsize;
 
-            DataDeal();
+            DealData();
             func(batchsize);
             PrintResults(name, batchsize);
             for (int i = 1; i <= batchsize; ++i)
