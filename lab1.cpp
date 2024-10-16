@@ -199,6 +199,17 @@ void run(void (*func)(int,vector<node>&), int batchsize, string info)
 	PrintResults(info, batchsize,work);
 }
 
+void runAll(int batchsize)
+{
+	vector<node> work = DataDeal();
+	FCFS(batchsize, work);
+	PrintResults("先来先服务算法", batchsize,work);
+	SJF(batchsize, work);
+	PrintResults("最短作业优先法", batchsize,work);
+	HRN(batchsize, work);
+	PrintResults("最高响应比算法", batchsize,work);
+}
+
 void menu()
 {
 	cout << "********************\n";
@@ -206,11 +217,12 @@ void menu()
 	cout << "1.先来先服务算法\n";
 	cout << "2.最短作业优先法\n";
 	cout << "3.最高响应比算法\n";
+	cout << "4.体验所有算法\n";
 	cout << "0.退出程序\n\n";
 	cout << "请输入你的选择: ";
 	int op,batchsize;
 	cin >> op;
-	cout << "请输入你的通道数量n(n>=1): ";
+	cout << "请输入你的通道数量: ";
 	cin >> batchsize;
 	switch (op)
 	{
@@ -225,6 +237,9 @@ void menu()
 	case 3:
 		run(HRN, batchsize, "最高响应比算法");
 		break; // 跳转到最高响应比算法
+	case 4:
+		runAll(batchsize);
+		break;
 	default:
 		cout << "\n选择无效\n\n";
 	}
