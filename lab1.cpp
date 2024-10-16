@@ -7,35 +7,28 @@
 #include <iomanip>
 using namespace std;
 
-const int N = 10000;
-
-int task;     // 任务的总数量
-int now_time; // 目前时间
-
 struct node
 {
-    char name[30]; // 作业的名字
-    int Ctime;     // 作业进入输入井的时间（以分计）
-    int Rtime;     // 作业的运行时间（以分计）
-    int Stime;     // 作业开始运行的时间
-    int Etime;     // 作业运行结束的时间
-    int Ttime;     // 作业周转时间
-    float Wtime;   // 作业带权周转时间
-} work[N];
+    string name; // ?????????
+    int Ctime;   // ?????????????????????
+    int Rtime;   // ?????????????????
+    int Stime;   // ?????????е????
+    int Etime;   // ??????н????????
+    int Ttime;   // ?????????
+    float Wtime; // ????????????
+};
 
-int batch[N]; // 模拟多道
-
-int Timestamp(string time) // 时间戳转换
+int Timestamp(string time) // ???????
 {
-    int pos = time.find_last_of(':'); // 找到最后冒号，以分隔小时和分钟
+    int pos = time.find_last_of(':'); // ??????????????С??????
 
-    string s1 = time.substr(0, pos); // 提取小时、分钟部分
+    string s1 = time.substr(0, pos); // ???С??????????
     string s2 = time.substr(pos + 1);
 
-    int n1 = stoi(s1); // 转换为整数
+    int n1 = stoi(s1); // ????????
     int n2 = stoi(s2);
 
-    return n1 * 60 + n2; // 返回分钟格式时间戳
+    return n1 * 60 + n2; // ?????????????
 }
 
 void p_Timestamp(int time)
@@ -44,29 +37,26 @@ void p_Timestamp(int time)
          << setw(2) << setfill('0') << time % 60 << "\t";
 }
 
-void DealData();                          // 数据处理
-void PrintResults(int op, int batchsize); // 打印结果
-
-void menu(string name, function<void(int)> func);
-
-function<void(int)> FCFS = [](int batchsize)
+void FCFS(int batchsize, vector<node> &work)
 {
     queue<int> q;
-    int task_id = 1;
-    now_time = 0;
-    while (task_id <= task || !q.empty())
+    vector<int> batch(batchsize + 1);
+    int work_id = 1;
+    int work_num = work.size() - 1;
+    int now_time = 0; // ?????
+    while (work_id <= work_num || !q.empty())
     {
         now_time++;
-        while (task_id <= task && now_time >= work[task_id].Ctime)
-        { // 判断该任务是否到达运行的开始时间
-            q.push(task_id);
-            task_id++;
+        while (work_id <= work_num && now_time >= work[work_id].Ctime)
+        { // ?ж?????????????е??????
+            q.push(work_id);
+            work_id++;
         }
 
         for (int i = 1; i <= batchsize; i++)
-        { // 判断现在是否有空闲的批处理弹道
+        { // ?ж?????????п??е???????????
             if (now_time >= batch[i] && !q.empty())
-            { // 如果有空闲批处理系统且任务队列不为空，则取优先级最高的，加入系统
+            { // ????п???????????????????в????????????????????????
                 int idx = q.front();
                 q.pop();
                 work[idx].Stime = now_time;
@@ -79,28 +69,30 @@ function<void(int)> FCFS = [](int batchsize)
     }
 };
 
-function<void(int)> SJF = [](int batchsize)
+void SJF(int batchsize, vector<node> &work)
 {
-    auto compareshort = [](int x, int y)
+    int work_num = work.size() - 1;
+    vector<int> batch(batchsize + 1);
+    auto compareshort = [&](int x, int y)
     {
         return work[x].Rtime > work[y].Rtime;
     };
     priority_queue<int, vector<int>, decltype(compareshort)> q(compareshort);
-    int task_id = 1;
-    now_time = 0;
-    while (task_id <= task || !q.empty())
+    int work_id = 1;
+    int now_time = 0; // ?????
+    while (work_id <= work_num || !q.empty())
     {
         now_time++;
-        while (task_id <= task && now_time >= work[task_id].Ctime)
-        { // 判断该任务是否到达运行的开始时间
-            q.push(task_id);
-            task_id++;
+        while (work_id <= work_num && now_time >= work[work_id].Ctime)
+        { // ?ж?????????????е??????
+            q.push(work_id);
+            work_id++;
         }
 
         for (int i = 1; i <= batchsize; i++)
-        { // 判断现在是否有空闲的批处理弹道
+        { // ?ж?????????п??е???????????
             if (now_time >= batch[i] && !q.empty())
-            { // 如果有空闲批处理系统且任务队列不为空，则取优先级最高的，加入系统
+            { // ????п???????????????????в????????????????????????
                 int idx = q.top();
                 q.pop();
                 work[idx].Stime = now_time;
@@ -113,29 +105,31 @@ function<void(int)> SJF = [](int batchsize)
     }
 };
 
-function<void(int)> HRN = [](int batchsize)
+void HRN(int batchsize, vector<node> &work)
 {
-    now_time = 0;
-    auto compare = [](int x, int y)
+    int work_num = work.size() - 1;
+    vector<int> batch(batchsize + 1);
+    int now_time = 0; // ?????
+    auto compare = [&](int x, int y)
     {
         return (now_time - work[x].Ctime) * (work[y].Rtime) < (now_time - work[y].Ctime) * (work[x].Rtime);
-    }; // 比较响应比优先运用(作业等待时间 / 作业执行时间)
+    }; // ????????????????(????????? / ?????????)
 
     priority_queue<int, vector<int>, decltype(compare)> q(compare);
-    int task_id = 1;
-    while (task_id <= task || !q.empty())
+    int work_id = 1;
+    while (work_id <= work_num || !q.empty())
     {
         now_time++;
-        while (task_id <= task && now_time >= work[task_id].Ctime)
-        { // 判断该任务是否到达运行的开始时间
-            q.push(task_id);
-            task_id++;
+        while (work_id <= work_num && now_time >= work[work_id].Ctime)
+        { // ?ж?????????????е??????
+            q.push(work_id);
+            work_id++;
         }
 
         for (int i = 1; i <= batchsize; i++)
-        { // 判断现在是否有空闲的批处理弹道
+        { // ?ж?????????п??е???????????
             if (now_time >= batch[i] && !q.empty())
-            { // 如果有空闲批处理系统且任务队列不为空，则取优先级最高的，加入系统
+            { // ????п???????????????????в????????????????????????
                 int idx = q.top();
                 q.pop();
                 work[idx].Stime = now_time;
@@ -148,71 +142,38 @@ function<void(int)> HRN = [](int batchsize)
     }
 };
 
-int main()
+vector<node> DataDeal()
 {
-    int op;
-    while (1)
-    {
-        system("cls");
-        cout << "*****************************\n\n";
-        cout << "    欢迎体验作业调度算法\n\n";
-        cout << "      1.先来先服务\n\n";
-        cout << "      2.最短作业优先法\n\n";
-        cout << "      3.最高响应比算法\n\n";
-        cout << "      0.退出\n\n";
-        cout << "      请输入你的选择： ";
-        cin >> op;
-        switch (op)
-        {
-        case 0:
-            exit(0);
-        case 1:
-            menu("先来先服务算法", FCFS);
-            break; // 跳转到先来先服务算法
-        case 2:
-            menu("最短优先服务算法", SJF);
-            break; // 跳转到最短优先服务算法
-        case 3:
-            menu("最高响应比算法", HRN);
-            break; // 跳转到最高响应比算法
-        default:
-            cout << "\n     选择无效\n\n";
-            system("cls");
-        }
-    }
-    return 0;
-}
-
-void DealData()
-{
-    cout << "      请输入要处理的任务数量: ";
-    cin >> task; // 读取用户输入的任务数量
+    cout << "?????????????????????: ";
+    int task_num;
+    cin >> task_num; // ???????????????????
+    vector<node> work(task_num + 1);
 
     string time;
-    cout << "      请输入名称 进入时间 耗时 \n"; // 提示用户输入任务的详细信息
+    cout << "????????????????????????? \n"; // ?????????????????????
 
-    for (int i = 1; i <= task; ++i)
+    for (int i = 1; i <= task_num; ++i)
     {
-        string s;
-        cin >> s;                        // 输入任务名称
-        strcpy(work[i].name, s.c_str()); // 将任务名称复制到结构体中
-
-        cin >> time;                     // 输入任务进入时间
-        work[i].Ctime = Timestamp(time); // 将进入时间转换为时间戳格式并存储
-
-        cin >> work[i].Rtime; // 输入任务耗时
+        cin >> work[i].name;             // ????????????
+        cin >> time;                     // ??????????????
+        work[i].Ctime = Timestamp(time); // ???????????????????????洢
+        cin >> work[i].Rtime;            // ??????????
     }
 
-    // 对任务数组进行自定义排序，利用lambda函数
-    sort(work + 1, work + 1 + task, [](node a, node b)
+    // ??????????????????????????lambda????
+    sort(&work[1], &work[task_num + 1], [](node a, node b)
          { return a.Ctime < b.Ctime; });
+    return work;
 }
 
-void PrintResults(string name, int batchsize)
+void PrintResults(string info, int batchsize, vector<node> work)
 {
-    cout << name << " " << batchsize << endl;
+    int SumTtime = 0;
+    float SumWtime = 0;
+    int work_num = work.size() - 1;
+    cout << info << ", ?????: " << batchsize << "?????: " << endl;
     cout << "name\tCtime\tRtime\tStime\tEtime\tTtime\tWtime" << endl;
-    for (int i = 1; i <= task; i++)
+    for (int i = 1; i <= work_num; i++)
     {
         cout << work[i].name << "\t";
         p_Timestamp(work[i].Ctime);
@@ -221,62 +182,75 @@ void PrintResults(string name, int batchsize)
         p_Timestamp(work[i].Etime);
         cout << work[i].Ttime << "\t";
         cout << fixed << setprecision(3) << work[i].Wtime << endl;
+        SumTtime += work[i].Ttime;
+        SumWtime += work[i].Wtime;
     }
-    cout << endl
-         << endl;
-    now_time = 0;
-    while (1)
+    cout << endl;
+    cout << "?????????: " << SumTtime * 1.0 / work_num << endl;
+    cout << "????????????: " << SumWtime * 1.0 / work_num << endl;
+    cout << endl;
+}
+
+void run(void (*func)(int, vector<node> &), int batchsize, string info)
+{
+    vector<node> work = DataDeal();
+    func(batchsize, work);
+    PrintResults(info, batchsize, work);
+}
+
+void runAll(int batchsize)
+{
+    vector<node> work = DataDeal();
+    FCFS(batchsize, work);
+    PrintResults("???????????", batchsize, work);
+    SJF(batchsize, work);
+    PrintResults("???????????", batchsize, work);
+    HRN(batchsize, work);
+    PrintResults("??????????", batchsize, work);
+}
+
+void menu()
+{
+    cout << "********************\n";
+    cout << "????????????????\n";
+    cout << "1.???????????\n";
+    cout << "2.???????????\n";
+    cout << "3.??????????\n";
+    cout << "4.??????????\n";
+    cout << "0.???????\n\n";
+    cout << "????????????: ";
+    int op, batchsize;
+    cin >> op;
+    cout << "????????????????: ";
+    cin >> batchsize;
+    switch (op)
     {
-        cout << "OK? [Y/n]\n";
-        char op;
-        cin >> op;
-        if (op == 'Y')
-        {
-            system("cls");
-            return;
-        }
+    case 0:
+        exit(0);
+    case 1:
+        run(FCFS, batchsize, "???????????");
+        break; // ????????????????
+    case 2:
+        run(SJF, batchsize, "???????????");
+        break; // ?????????????????
+    case 3:
+        run(HRN, batchsize, "??????????");
+        break; // ???????????????
+    case 4:
+        runAll(batchsize);
+        break;
+    default:
+        cout << "\n?????Ч\n\n";
     }
 }
 
-void menu(string name, function<void(int)> func)
+int main()
 {
-    system("cls");
-    int op;
     while (1)
     {
-        cout << "*****************************\n\n";
-        cout << "    " << name << "\n\n";
-        cout << "      1.单道运行(1)\n\n";
-        cout << "      2.多道运行(>=2)\n\n";
-        cout << "      0.退出\n\n";
-        cout << "      请输入你的选择： ";
-        cin >> op;
-        switch (op)
-        {
-        case 0:
-            return;
-        case 1:
-            DealData();
-            func(1); // 单道运行
-            PrintResults(name, 1);
-            batch[1] = 0;
-            break;
-        case 2:
-            cout << "      请输入多道数量： "; // 多道运行(>=2)
-            int batchsize;
-            cin >> batchsize;
-
-            DealData();
-            func(batchsize);
-            PrintResults(name, batchsize);
-            for (int i = 1; i <= batchsize; ++i)
-                batch[i] = 0;
-            break;
-        default:
-            cout << "\n     选择无效\n\n";
-            system("cls");
-        }
+        menu();
     }
+    return 0;
 }
 
 /*
